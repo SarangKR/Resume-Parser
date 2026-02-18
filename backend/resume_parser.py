@@ -7,19 +7,15 @@ from pypdf import PdfReader
 
 
 # ==========================================
-# 1. DATABASE MANAGEMENT
+# 1. SKILLS CONSTANTS
 # ==========================================
-def refresh_skills_database():
-    skills_list = [
-        "Python", "Java", "C++", "JavaScript", "TypeScript", "React", "Angular", "Vue",
-        "Node.js", "Django", "Flask", "FastAPI", "SQL", "NoSQL", "PostgreSQL", "MongoDB",
-        "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes", "Git", "Jenkins",
-        "Machine Learning", "Deep Learning", "Data Science", "NLP", "TensorFlow", "PyTorch",
-        "Pandas", "NumPy", "Scikit-Learn", "Tableau", "Power BI", "Excel"
-    ]
-    # Always update the skills database to ensure latest changes are applied
-    pd.DataFrame({"skill_name": skills_list}).to_csv("skills.csv", index=False)
-
+SKILLS_LIST = [
+    "Python", "Java", "C++", "JavaScript", "TypeScript", "React", "Angular", "Vue",
+    "Node.js", "Django", "Flask", "FastAPI", "SQL", "NoSQL", "PostgreSQL", "MongoDB",
+    "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes", "Git", "Jenkins",
+    "Machine Learning", "Deep Learning", "Data Science", "NLP", "TensorFlow", "PyTorch",
+    "Pandas", "NumPy", "Scikit-Learn", "Tableau", "Power BI", "Excel"
+]
 
 # ==========================================
 # 2. PARSER CLASS
@@ -40,19 +36,20 @@ class ResumeParser:
         self.doc = self.nlp(self.clean_text)
 
     def _load_model(self):
+        # In serverless/Vercel, we assume the model is installed via requirements.txt
+        # using the direct URL to the wheel.
         try:
             nlp = spacy.load("en_core_web_sm")
         except OSError:
+            # Fallback purely for local dev if model missing, though requirements.txt should handle it
+            print("Model not found. Attempting to download...")
             from spacy.cli import download
             download("en_core_web_sm")
             nlp = spacy.load("en_core_web_sm")
 
-        refresh_skills_database()
-
         if "entity_ruler" not in nlp.pipe_names:
             ruler = nlp.add_pipe("entity_ruler", before="ner")
-            df = pd.read_csv("skills.csv")
-            patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in df['skill_name']]
+            patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in SKILLS_LIST]
             ruler.add_patterns(patterns)
         return nlp
 

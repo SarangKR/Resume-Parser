@@ -28,7 +28,7 @@ function App() {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/parse', {
+            const response = await fetch('/api/parse', {
                 method: 'POST',
                 body: formData,
             })

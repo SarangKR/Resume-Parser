@@ -2,9 +2,10 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import shutil
+import tempfile
 import os
 from typing import Optional
-from resume_parser import ResumeParser, refresh_skills_database
+from resume_parser import ResumeParser
 from email_service import EmailService
 
 app = FastAPI(title="Resume Parser API")
@@ -19,9 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize database
-refresh_skills_database()
-
 @app.get("/")
 async def root():
     return {"message": "Resume Parser API is running"}
@@ -35,11 +33,11 @@ async def parse_resume(
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
-    # Save uploaded file temporarily
-    temp_filename = f"temp_{file.filename}"
+    # Save uploaded file temporarily using tempfile
     try:
-        with open(temp_filename, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            temp_filename = tmp_file.name
             
         # Initialize parser with file path
         parser = ResumeParser(temp_filename)
