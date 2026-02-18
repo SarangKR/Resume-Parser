@@ -295,3 +295,9 @@ async def catch_all(full_path: str, request: fastapi.Request):
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
 # ... existing exception handler ...
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Internal Server Error: {str(exc)}\n\nTraceback:\n{traceback.format_exc()}"
+        }
+    )
