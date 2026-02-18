@@ -7,6 +7,6 @@ except Exception:
     
     app = FastAPI()
     
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE"])
     async def catch_all(full_path: str):
         return PlainTextResponse(f"Backend failed to start:\n{traceback.format_exc()}", status_code=500)
