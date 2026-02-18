@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-slate-200 font-sans antialiased;
+  }
+
+  ::selection {
+    background: #575757;
+    /* charcoal */
+    color: #ffffff;
+  }
+
+  /* Removed Arena font-face */
+
+  /* Enforce Syne for all headings globally as a fallback/ensure */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* Enforce Outfit for body/sans text */
+  body,
+  p,
+  span,
+  div,
+  a,
+  li,
+  input,
+  button {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1), 0 0 10px rgba(255, 255, 255, 0.05);
+    /* Subtle glow */
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0F0F0F;
+    /* onyx */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3E3E3E;
+    /* lightgrey/irongrey */
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5E5E5E;
+    /* lighter grey */
+  }
+}
