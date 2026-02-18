@@ -1,10 +1,4 @@
 {
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
   "installCommand": "pip install --break-system-packages -r backend/requirements.txt",
   "rewrites": [
     {
