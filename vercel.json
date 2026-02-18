@@ -1,4 +1,5 @@
 {
+  "installCommand": "pip install --break-system-packages -r backend/requirements.txt",
   "rewrites": [
     {
       "source": "/api/(.*)",
