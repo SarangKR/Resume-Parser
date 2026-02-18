@@ -34,7 +34,8 @@ function App() {
             })
 
             if (!response.ok) {
-                throw new Error('Failed to parse resume')
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.detail || 'Failed to parse resume')
             }
 
             const result = await response.json()
@@ -42,7 +43,7 @@ function App() {
             setResumeData({ ...result.data, meta: result.meta })
         } catch (error) {
             console.error("Upload failed", error)
-            setUploadError("Failed to parse resume. Please ensure the backend is running.")
+            setUploadError(error.message || "Failed to parse resume. Please ensure the backend is running.")
         } finally {
             setLoading(false)
         }

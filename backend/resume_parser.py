@@ -24,8 +24,10 @@ class ResumeParser:
     def __init__(self, input_data):
         self.nlp = self._load_model()
 
-        # Handle File vs Text
-        if os.path.exists(str(input_data)) and str(input_data).endswith(".pdf"):
+        # Handle File Path vs Stream vs Text
+        if isinstance(input_data, str) and os.path.exists(input_data) and input_data.endswith(".pdf"):
+            self.text = self._extract_text_from_file(input_data)
+        elif hasattr(input_data, 'read'): # File-like object (stream)
             self.text = self._extract_text_from_file(input_data)
         else:
             self.text = input_data
@@ -49,9 +51,9 @@ class ResumeParser:
             ruler.add_patterns(patterns)
         return nlp
 
-    def _extract_text_from_file(self, file_path):
+    def _extract_text_from_file(self, file_source):
         try:
-            reader = PdfReader(file_path)
+            reader = PdfReader(file_source)
             # Use newline to preserve structure
             return "\n".join([page.extract_text() for page in reader.pages])
         except Exception:

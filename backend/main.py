@@ -1,9 +1,7 @@
+import io
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import shutil
-import tempfile
-import os
 from typing import Optional
 try:
     from .resume_parser import ResumeParser
@@ -39,14 +37,13 @@ async def parse_resume(
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
-    # Save uploaded file temporarily using tempfile
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            shutil.copyfileobj(file.file, tmp_file)
-            temp_filename = tmp_file.name
+        # Read file into memory
+        file_content = await file.read()
+        file_stream = io.BytesIO(file_content)
             
-        # Initialize parser with file path
-        parser = ResumeParser(temp_filename)
+        # Initialize parser with file stream
+        parser = ResumeParser(file_stream)
         data = parser.parse()
         
         # Calculate Base Confidence (Data Completeness)
@@ -98,12 +95,9 @@ async def parse_resume(
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-        
-    finally:
-        # Clean up temp file
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
+        import traceback
+        traceback.print_exc() # Print stack trace to logs for debugging
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 # Mount the router at both root and /api for compatibility
 app.include_router(router)
