@@ -36,17 +36,13 @@ class ResumeParser:
         self.doc = self.nlp(self.clean_text)
 
     def _load_model(self):
-        # In serverless/Vercel, we assume the model is installed via requirements.txt
-        # using the direct URL to the wheel.
         try:
+            import en_core_web_sm
+            nlp = en_core_web_sm.load()
+        except ImportError:
+            # Fallback for local development if the module isn't found but 'en_core_web_sm' is linked
             nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            # Fallback purely for local dev if model missing, though requirements.txt should handle it
-            print("Model not found. Attempting to download...")
-            from spacy.cli import download
-            download("en_core_web_sm")
-            nlp = spacy.load("en_core_web_sm")
-
+        
         if "entity_ruler" not in nlp.pipe_names:
             ruler = nlp.add_pipe("entity_ruler", before="ner")
             patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in SKILLS_LIST]
