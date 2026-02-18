@@ -1,14 +1,20 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import shutil
 import tempfile
 import os
 from typing import Optional
-from resume_parser import ResumeParser
-from email_service import EmailService
+try:
+    from .resume_parser import ResumeParser
+    from .email_service import EmailService
+except ImportError:
+    from resume_parser import ResumeParser
+    from email_service import EmailService
 
 app = FastAPI(title="Resume Parser API")
+router = APIRouter()
+
 email_service = EmailService()
 
 # Configure CORS
@@ -20,11 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@router.get("/")
 async def root():
     return {"message": "Resume Parser API is running"}
 
-@app.post("/parse")
+@router.post("/parse")
 async def parse_resume(
     file: UploadFile = File(...),
     required_skills: Optional[str] = Form(None),
@@ -98,6 +104,10 @@ async def parse_resume(
         # Clean up temp file
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
+
+# Mount the router at both root and /api for compatibility
+app.include_router(router)
+app.include_router(router, prefix="/api")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
