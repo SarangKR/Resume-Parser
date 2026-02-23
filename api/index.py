@@ -145,16 +145,21 @@ async def parse_resume(
             try:
                 import en_core_web_sm
                 nlp = en_core_web_sm.load()
-            except ImportError:
+            except ImportError as e:
+                print(f"ImportError loading en_core_web_sm: {e}")
                 try:
                     # Fallback
                     nlp = spacy.load("en_core_web_sm")
-                except Exception:
+                except Exception as e2:
+                    print(f"Exception loading en_core_web_sm: {e2}")
                     # Absolute fallback
                     nlp = spacy.blank("en")
             
             if "entity_ruler" not in nlp.pipe_names:
-                ruler = nlp.add_pipe("entity_ruler", before="ner")
+                if "ner" in nlp.pipe_names:
+                    ruler = nlp.add_pipe("entity_ruler", before="ner")
+                else:
+                    ruler = nlp.add_pipe("entity_ruler")
                 patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in self.SKILLS_LIST]
                 ruler.add_patterns(patterns)
                 
