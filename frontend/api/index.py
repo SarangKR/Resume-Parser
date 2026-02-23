@@ -269,38 +269,6 @@ async def parse_resume(
             content={"detail": f"Runtime Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"}
         )
 
-# ... existing imports ...
-
 # Mount Routes
 app.include_router(router)
 app.include_router(router, prefix="/api")
-
-# --- DEBUG ROUTES ---
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok", "message": "Backend is reachable"}
-
-@app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-async def catch_all(full_path: str, request: Request):
-    return JSONResponse(
-        status_code=404, 
-        content={
-            "detail": "Route not found (Caught by fallback)",
-            "received_path": full_path,
-            "original_url": str(request.url),
-            "method": request.method,
-            "headers": dict(request.headers)
-        }
-    )
-
-# Global Exception Handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    # ... existing exception handler ...
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": f"Internal Server Error: {str(exc)}\n\nTraceback:\n{traceback.format_exc()}"
-        }
-    )
-
