@@ -3,3 +3,5 @@ Sample Resume
 TS Logo.png
 .idea
 generate_resumes.py
+frontend/node_modules
+frontend/dist
