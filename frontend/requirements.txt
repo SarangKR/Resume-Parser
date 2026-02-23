@@ -1,5 +1,4 @@
 fastapi
 python-multipart
 pypdf
-spacy
 uvicorn
