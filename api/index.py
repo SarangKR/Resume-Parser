@@ -201,6 +201,13 @@ async def parse_resume(
             for ent in self.doc.ents:
                 if ent.label_ == "PERSON":
                     return ent.text.strip()
+            # Lightweight Fallback Strategy (in case the heavy Spacy model is omitted)
+            for line in self.lines[:5]:
+                line = line.strip()
+                # Match basic 2-4 word names (e.g., "John Doe", "Jane Smith Johnson")
+                if 2 <= len(line.split()) <= 4 and re.match(r'^[A-Z][A-Za-z]+ [A-Z][A-Za-z]+', line):
+                    if not any(word in line.lower() for word in ["resume", "curriculum", "vitae", "summary", "profile", "contact"]):
+                        return line
             return None
 
         def extract_contact_info(self):
@@ -316,3 +323,4 @@ async def global_exception_handler(request: Request, exc: Exception):
             "detail": f"Internal Server Error: {str(exc)}\n\nTraceback:\n{traceback.format_exc()}"
         }
     )
+
