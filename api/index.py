@@ -95,9 +95,7 @@ async def parse_resume(
 ):
     try:
         # 1. Lazy Import dependencies here to catch errors
-        import spacy
         from pypdf import PdfReader
-        from spacy.pipeline import EntityRuler
         # pandas is not strictly used in the logic below, so we can skip it or import if needed
     except ImportError as e:
         return JSONResponse(
@@ -122,7 +120,8 @@ async def parse_resume(
         ]
 
         def __init__(self, input_data):
-            self.nlp = self._load_model()
+            # We bypass model loading for size limits
+            self.nlp = None
             if isinstance(input_data, str) and os.path.exists(input_data) and input_data.endswith(".pdf"):
                 self.text = self._extract_text_from_file(input_data)
             elif hasattr(input_data, 'read'):
@@ -132,40 +131,10 @@ async def parse_resume(
             
             self.lines = [line.strip() for line in self.text.split('\n') if line.strip()]
             self.clean_text = " ".join(self.lines)
-            self.doc = self.nlp(self.clean_text)
+            # Spacy doc initialization removed to save bundle size
 
         def _load_model(self):
-            # Caching globally within the current worker memory to avoid reloading Spacy per request
-            global _global_nlp_model
-            
-            if '_global_nlp_model' in globals() and _global_nlp_model is not None:
-                return _global_nlp_model
-
-            import spacy
-            try:
-                import en_core_web_sm
-                nlp = en_core_web_sm.load()
-            except ImportError as e:
-                print(f"ImportError loading en_core_web_sm: {e}")
-                try:
-                    # Fallback
-                    nlp = spacy.load("en_core_web_sm")
-                except Exception as e2:
-                    print(f"Exception loading en_core_web_sm: {e2}")
-                    # Absolute fallback
-                    nlp = spacy.blank("en")
-            
-            if "entity_ruler" not in nlp.pipe_names:
-                if "ner" in nlp.pipe_names:
-                    ruler = nlp.add_pipe("entity_ruler", before="ner")
-                else:
-                    ruler = nlp.add_pipe("entity_ruler")
-                patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in self.SKILLS_LIST]
-                ruler.add_patterns(patterns)
-                
-            # Set the global cache
-            globals()['_global_nlp_model'] = nlp
-            return nlp
+            return None
 
         def _extract_text_from_file(self, file_source):
             try:
@@ -198,9 +167,6 @@ async def parse_resume(
             return sections
 
         def extract_name(self):
-            for ent in self.doc.ents:
-                if ent.label_ == "PERSON":
-                    return ent.text.strip()
             # Lightweight Fallback Strategy (in case the heavy Spacy model is omitted)
             for line in self.lines[:5]:
                 line = line.strip()
@@ -220,8 +186,22 @@ async def parse_resume(
 
         def parse(self):
             contact = self.extract_contact_info()
-            skills = sorted(list(set([ent.text for ent in self.doc.ents if ent.label_ == "SKILL"])))
+            
+            # Pure Regex Skills Extraction
+            extracted_skills = set()
+            clean_text_lower = self.clean_text.lower()
+            
+            for skill in self.SKILLS_LIST:
+                # Use word boundaries to prevent partial matches (e.g. matching "C" inside "React")
+                # Handle special characters in skills like C++ or Node.js
+                escaped_skill = re.escape(skill.lower())
+                pattern = r'\b' + escaped_skill + r'(?:\b|(?=\W|$))'
+                if re.search(pattern, clean_text_lower):
+                    extracted_skills.add(skill)
+                    
+            skills = sorted(list(extracted_skills))
             sections = self.extract_sections()
+            
             return {
                 "Name": self.extract_name(),
                 "Email": contact["email"],
