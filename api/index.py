@@ -12,7 +12,7 @@ from email.mime.multipart import MIMEMultipart
 
 # Try to import FastAPI - if this fails, we really can't do anything, but Vercel logs should show it.
 try:
-    from fastapi import FastAPI, UploadFile, File, HTTPException, Form, APIRouter
+    from fastapi import FastAPI, UploadFile, File, HTTPException, Form, APIRouter, Request
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
 except ImportError:
@@ -128,13 +128,20 @@ async def parse_resume(
             elif hasattr(input_data, 'read'):
                 self.text = self._extract_text_from_file(input_data)
             else:
-                self.text = input_data
+                self.text = str(input_data) if input_data is not None else ""
             
             self.lines = [line.strip() for line in self.text.split('\n') if line.strip()]
             self.clean_text = " ".join(self.lines)
             self.doc = self.nlp(self.clean_text)
 
         def _load_model(self):
+            # Caching globally within the current worker memory to avoid reloading Spacy per request
+            global _global_nlp_model
+            
+            if '_global_nlp_model' in globals() and _global_nlp_model is not None:
+                return _global_nlp_model
+
+            import spacy
             try:
                 import en_core_web_sm
                 nlp = en_core_web_sm.load()
@@ -150,6 +157,9 @@ async def parse_resume(
                 ruler = nlp.add_pipe("entity_ruler", before="ner")
                 patterns = [{"label": "SKILL", "pattern": [{"LOWER": s.lower()}]} for s in self.SKILLS_LIST]
                 ruler.add_patterns(patterns)
+                
+            # Set the global cache
+            globals()['_global_nlp_model'] = nlp
             return nlp
 
         def _extract_text_from_file(self, file_source):
@@ -209,7 +219,7 @@ async def parse_resume(
                 "Projects": sections["Projects"]
             }
 
-    if not file.filename.endswith(".pdf"):
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
     try:
@@ -279,7 +289,7 @@ async def health_check():
     return {"status": "ok", "message": "Backend is reachable"}
 
 @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-async def catch_all(full_path: str, request: fastapi.Request):
+async def catch_all(full_path: str, request: Request):
     return JSONResponse(
         status_code=404, 
         content={
@@ -293,8 +303,8 @@ async def catch_all(full_path: str, request: fastapi.Request):
 
 # Global Exception Handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-# ... existing exception handler ...
+async def global_exception_handler(request: Request, exc: Exception):
+    # ... existing exception handler ...
     return JSONResponse(
         status_code=500,
         content={
