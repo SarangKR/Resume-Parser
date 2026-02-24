@@ -57,7 +57,7 @@ function App() {
     return (
         <div className="min-h-screen flex flex-row bg-transparent text-slate-200 font-sans">
             {/* Sidebar */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onReset={handleReset} />
 
             <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
                 {/* Mobile Header (Only visible on small screens) */}
@@ -68,7 +68,9 @@ function App() {
                                 <Menu className="w-6 h-6" />
                             </button>
                             <div className="flex items-center gap-3">
-                                <h1 className="text-base md:text-xl font-bold tracking-widest text-white/90 font-heading text-glow uppercase">TalentScout</h1>
+                                <button onClick={handleReset} className="text-base md:text-xl font-bold tracking-widest text-white/90 font-heading text-glow uppercase hover:text-white transition-colors cursor-pointer">
+                                    TalentScout
+                                </button>
                             </div>
                         </div>
                     </div>

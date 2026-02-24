@@ -1,6 +1,6 @@
 import { Monitor, Shield, HelpCircle, FileText, X } from 'lucide-react'
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, onReset }) {
     return (
         <>
             {/* Mobile Overlay */}
@@ -29,9 +29,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 <div className={`${!isOpen && 'lg:hidden'} h-full flex flex-col ${isOpen ? 'p-6' : ''}`}>
                     {/* Logo/Branding */}
                     <div className="mb-10 flex items-center gap-3">
-                        <h1 className="text-xl font-bold tracking-widest text-white/90 font-heading text-glow uppercase">
+                        <button onClick={onReset} className="text-xl font-bold tracking-widest text-white/90 font-heading text-glow uppercase hover:text-white transition-colors cursor-pointer">
                             TalentScout
-                        </h1>
+                        </button>
                     </div>
 
                     {/* Navigation / Info Sections */}
