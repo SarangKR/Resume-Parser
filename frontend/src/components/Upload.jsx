@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { UploadCloud, File, Loader2, Briefcase, Mail, ChevronDown, ChevronUp } from 'lucide-react'
 
-export default function Upload({ onUpload, loading, autoOpen }) {
+export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
     const [dragActive, setDragActive] = useState(false)
     const [showRecruiterOptions, setShowRecruiterOptions] = useState(false)
     const [requiredSkills, setRequiredSkills] = useState('')
     const [recruiterEmail, setRecruiterEmail] = useState('')
+    const [selectedFile, setSelectedFile] = useState(null)
     const inputRef = useRef(null)
 
     // useEffect(() => {
@@ -42,8 +43,14 @@ export default function Upload({ onUpload, loading, autoOpen }) {
     }
 
     const handleFileSelect = (file) => {
-        // Pass file AND recruiter options
-        onUpload(file, { requiredSkills, recruiterEmail })
+        setSelectedFile(file)
+        if (onFileSelect) onFileSelect()
+    }
+
+    const handleSubmit = () => {
+        if (selectedFile) {
+            onUpload(selectedFile, { requiredSkills, recruiterEmail })
+        }
     }
 
     const onButtonClick = () => {
@@ -56,10 +63,10 @@ export default function Upload({ onUpload, loading, autoOpen }) {
             <div className="w-full mb-4">
                 <button
                     onClick={() => setShowRecruiterOptions(!showRecruiterOptions)}
-                    className="flex items-center gap-2 text-sm text-grey hover:text-primary transition-colors mb-2 font-heading uppercase tracking-wider"
+                    className="flex items-center justify-center w-full gap-2 p-3 text-sm text-slate-200 hover:text-white transition-all duration-300 mb-2 font-heading uppercase tracking-wider bg-carbon/60 border border-charcoal rounded-lg hover:bg-carbon/80 shadow-md"
                 >
                     {showRecruiterOptions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    Recruiter Options (Optional)
+                    Recruiter Options
                 </button>
 
                 {showRecruiterOptions && (
@@ -128,10 +135,10 @@ export default function Upload({ onUpload, loading, autoOpen }) {
 
                 <div className="space-y-2">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white group-hover:text-primary transition-colors font-heading tracking-widest uppercase text-glow">
-                        {loading ? "Analyzing Resume..." : "Upload Candidate Resume"}
+                        {loading ? "Analyzing Resume..." : (selectedFile ? "Ready to Submit" : "Upload Candidate Resume")}
                     </h3>
-                    <p className="text-grey text-xs sm:text-sm md:text-base font-sans tracking-wide">
-                        Drag and drop your PDF here, or click to browse
+                    <p className={`text-xs sm:text-sm md:text-base font-sans tracking-wide ${selectedFile ? 'text-primary font-semibold' : 'text-grey'}`}>
+                        {selectedFile ? `Selected: ${selectedFile.name}` : "Drag and drop your PDF here, or click to browse"}
                     </p>
                 </div>
 
@@ -139,6 +146,24 @@ export default function Upload({ onUpload, loading, autoOpen }) {
                     Supported Format: PDF
                 </div>
             </div>
+
+            {selectedFile && !loading && (
+                <button
+                    onClick={handleSubmit}
+                    className="mt-6 px-10 py-3 rounded-lg font-heading uppercase tracking-widest text-sm font-bold shadow-lg transition-all duration-300 bg-carbon border border-charcoal text-white hover:bg-carbon/80 hover:text-primary hover:border-primary/50"
+                >
+                    Submit for Parsing
+                </button>
+            )}
+
+            {loading && (
+                <button
+                    disabled
+                    className="mt-6 px-10 py-3 rounded-lg font-heading uppercase tracking-widest text-sm font-bold shadow-lg transition-all duration-300 bg-onyx border border-irongrey text-dimgrey cursor-not-allowed"
+                >
+                    Parsing...
+                </button>
+            )}
         </div>
     )
 }

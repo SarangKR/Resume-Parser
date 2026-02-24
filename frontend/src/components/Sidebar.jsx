@@ -1,6 +1,6 @@
 import { Monitor, Shield, HelpCircle, FileText, X } from 'lucide-react'
 
-export default function Sidebar({ isOpen, onClose, onReset }) {
+export default function Sidebar({ isOpen, onClose, onReset, currentStep = 0 }) {
     return (
         <>
             {/* Mobile Overlay */}
@@ -43,24 +43,27 @@ export default function Sidebar({ isOpen, onClose, onReset }) {
                                 Usage Guide
                             </h3>
                             <div className="relative pl-4 border-l border-irongrey/50 space-y-6">
+                                {/* Step 1 */}
                                 <div className="group relative">
-                                    <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-onyx border border-grey group-hover:border-primary group-hover:bg-primary transition-colors duration-300"></span>
-                                    <h4 className="text-white font-medium font-heading tracking-wide uppercase text-sm mb-1 group-hover:text-primary transition-colors">1. Upload Resume</h4>
-                                    <p className="text-xs text-grey font-sans leading-relaxed">
+                                    <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border transition-colors duration-300 ${currentStep >= 1 ? 'bg-green-500 border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-onyx border-grey group-hover:border-green-500 group-hover:bg-green-500'}`}></span>
+                                    <h4 className={`font-medium font-heading tracking-wide uppercase text-sm mb-1 transition-colors ${currentStep >= 1 ? 'text-green-500' : 'text-white group-hover:text-green-500'}`}>1. Upload Resume</h4>
+                                    <p className={`text-xs font-sans leading-relaxed ${currentStep >= 1 ? 'text-slate-300' : 'text-grey'}`}>
                                         PDF format required. Drag & drop supported.
                                     </p>
                                 </div>
+                                {/* Step 2 */}
                                 <div className="group relative">
-                                    <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-onyx border border-grey group-hover:border-primary group-hover:bg-primary transition-colors duration-300"></span>
-                                    <h4 className="text-white font-medium font-heading tracking-wide uppercase text-sm mb-1 group-hover:text-primary transition-colors">2. AI Analysis</h4>
-                                    <p className="text-xs text-grey font-sans leading-relaxed">
+                                    <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border transition-colors duration-300 ${currentStep >= 2 ? 'bg-green-500 border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-onyx border-grey group-hover:border-green-500 group-hover:bg-green-500'}`}></span>
+                                    <h4 className={`font-medium font-heading tracking-wide uppercase text-sm mb-1 transition-colors ${currentStep >= 2 ? 'text-green-500' : 'text-white group-hover:text-green-500'}`}>2. AI Analysis</h4>
+                                    <p className={`text-xs font-sans leading-relaxed ${currentStep >= 2 ? 'text-slate-300' : 'text-grey'}`}>
                                         Extraction of contact info, skills, and experience.
                                     </p>
                                 </div>
+                                {/* Step 3 */}
                                 <div className="group relative">
-                                    <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-onyx border border-grey group-hover:border-primary group-hover:bg-primary transition-colors duration-300"></span>
-                                    <h4 className="text-white font-medium font-heading tracking-wide uppercase text-sm mb-1 group-hover:text-primary transition-colors">3. Review Data</h4>
-                                    <p className="text-xs text-grey font-sans leading-relaxed">
+                                    <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border transition-colors duration-300 ${currentStep >= 3 ? 'bg-green-500 border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-onyx border-grey group-hover:border-green-500 group-hover:bg-green-500'}`}></span>
+                                    <h4 className={`font-medium font-heading tracking-wide uppercase text-sm mb-1 transition-colors ${currentStep >= 3 ? 'text-green-500' : 'text-white group-hover:text-green-500'}`}>3. Review Data</h4>
+                                    <p className={`text-xs font-sans leading-relaxed ${currentStep >= 3 ? 'text-slate-300' : 'text-grey'}`}>
                                         Verify parsed details and view completeness score.
                                     </p>
                                 </div>

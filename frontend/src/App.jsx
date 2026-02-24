@@ -9,7 +9,18 @@ function App() {
     const [loading, setLoading] = useState(false)
     const [uploadError, setUploadError] = useState(null)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-    const [autoOpenUpload, setAutoOpenUpload] = useState(false) // Added this state
+    const [autoOpenUpload, setAutoOpenUpload] = useState(false)
+    const [isFileSelected, setIsFileSelected] = useState(false) // Added this state
+
+    // Determine current progress step
+    let currentStep = 0; // Default state: Nothing selected
+    if (resumeData) {
+        currentStep = 3; // Step 3: Review Data
+    } else if (loading) {
+        currentStep = 2; // Step 2: AI Analysis
+    } else if (isFileSelected) {
+        currentStep = 1; // Step 1: Upload Resume (File Selected, waiting for Submit)
+    }
 
     const handleUpload = async (file, options = {}) => {
         setLoading(true)
@@ -52,12 +63,13 @@ function App() {
     const handleReset = () => {
         setResumeData(null)
         setUploadError(null)
+        setIsFileSelected(false)
     }
 
     return (
         <div className="min-h-screen flex flex-row bg-transparent text-slate-200 font-sans">
             {/* Sidebar */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onReset={handleReset} />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onReset={handleReset} currentStep={currentStep} />
 
             <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
                 {/* Mobile Header (Only visible on small screens) */}
@@ -100,7 +112,7 @@ function App() {
                                     </p>
                                 </div>
 
-                                <Upload onUpload={handleUpload} loading={loading} />
+                                <Upload onUpload={handleUpload} loading={loading} onFileSelect={() => setIsFileSelected(true)} />
 
                                 {uploadError && (
                                     <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-lg text-sm md:text-base animate-pulse font-sans">
