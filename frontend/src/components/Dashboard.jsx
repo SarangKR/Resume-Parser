@@ -1,5 +1,43 @@
-import { Mail, Phone, Code2, Briefcase, FolderGit2 } from 'lucide-react'
+import { useState } from 'react'
+import { Mail, Phone, Code2, Briefcase, FolderGit2, ChevronDown, ChevronUp } from 'lucide-react'
 import MatchResult from './MatchResult'
+
+const ExpandableList = ({ items, emptyMessage }) => {
+    const [isExpanded, setIsExpanded] = useState(false)
+
+    if (!items || items.length === 0) {
+        return <p className="text-grey italic text-sm font-sans">{emptyMessage}</p>
+    }
+
+    const initialCount = 2
+    const hasMore = items.length > initialCount
+    const displayedItems = isExpanded ? items : items.slice(0, initialCount)
+
+    return (
+        <>
+            {displayedItems.map((item, i) => (
+                <p key={i} className="text-sm text-slate-300 leading-relaxed border-l-2 border-irongrey pl-3 hover:border-primary transition-colors font-sans group relative">
+                    <span className="whitespace-pre-line">{typeof item === 'string' ? item : JSON.stringify(item)}</span>
+                </p>
+            ))}
+
+            {hasMore && (
+                <div className="pt-2 flex justify-start">
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="flex items-center gap-1.5 mt-1 text-xs text-primary/80 hover:text-white transition-colors font-bold cursor-pointer uppercase tracking-widest font-heading"
+                    >
+                        {isExpanded ? (
+                            <>Show Less <ChevronUp className="w-3.5 h-3.5" /></>
+                        ) : (
+                            <>Read More <ChevronDown className="w-3.5 h-3.5" /></>
+                        )}
+                    </button>
+                </div>
+            )}
+        </>
+    )
+}
 
 export default function Dashboard({ data, onReset }) {
     const skills = data.Skills || []
@@ -117,15 +155,7 @@ export default function Dashboard({ data, onReset }) {
                         <h3 className="font-semibold text-white tracking-widest font-heading uppercase text-glow">Work Experience</h3>
                     </div>
                     <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                        {data.Experience && data.Experience.length > 0 ? (
-                            data.Experience.map((exp, i) => (
-                                <p key={i} className="text-sm text-slate-300 leading-relaxed border-l-2 border-irongrey pl-3 hover:border-primary transition-colors font-sans">
-                                    {exp}
-                                </p>
-                            ))
-                        ) : (
-                            <p className="text-grey italic text-sm font-sans">No experience section detected.</p>
-                        )}
+                        <ExpandableList items={data.Experience} emptyMessage="No experience section detected." />
                     </div>
                 </div>
 
@@ -136,15 +166,7 @@ export default function Dashboard({ data, onReset }) {
                         <h3 className="font-semibold text-white tracking-widest font-heading uppercase text-glow">Key Projects</h3>
                     </div>
                     <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                        {data.Projects && data.Projects.length > 0 ? (
-                            data.Projects.map((proj, i) => (
-                                <p key={i} className="text-sm text-slate-300 leading-relaxed border-l-2 border-irongrey pl-3 hover:border-primary transition-colors font-sans">
-                                    {proj}
-                                </p>
-                            ))
-                        ) : (
-                            <p className="text-grey italic text-sm font-sans">No projects section detected.</p>
-                        )}
+                        <ExpandableList items={data.Projects} emptyMessage="No projects section detected." />
                     </div>
                 </div>
             </div>
