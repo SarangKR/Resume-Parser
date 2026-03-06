@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { FileText, Menu, PanelLeft, Mail, ArrowLeft } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Upload from './components/Upload'
 import Dashboard from './components/Dashboard'
 import Sidebar from './components/Sidebar'
@@ -125,54 +126,87 @@ function App() {
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-y-auto w-full">
                     <div className="container mx-auto px-4 md:px-8 py-8 md:py-12 max-w-7xl">
-                        {(!resumeDataList || resumeDataList.length === 0) ? (
-                            <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[80vh] fade-in">
-                                <div className="mb-8 md:mb-12 text-center space-y-4">
-                                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-grey mb-2 tracking-wide font-heading text-glow uppercase">
-                                        Resume Parser
-                                    </h2>
-                                    <p className="text-grey text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-sans tracking-wide">
-                                        Extract, analyze, and structure candidate data automatically with precision.
-                                        Compare the extracted data with the job description and get the best match.
-                                    </p>
-                                </div>
-
-                                <Upload onUpload={handleUpload} loading={loading} onFileSelect={() => setIsFileSelected(true)} />
-
-                                {uploadError && (
-                                    <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-lg text-sm md:text-base animate-pulse font-sans">
-                                        ⚠️ {uploadError}
+                        <AnimatePresence mode="wait">
+                            {(!resumeDataList || resumeDataList.length === 0) ? (
+                                <motion.div
+                                    key="upload"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                                    className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[80vh] w-full"
+                                >
+                                    <div className="mb-8 md:mb-12 text-center space-y-4">
+                                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-grey mb-2 tracking-wide font-heading text-glow uppercase">
+                                            Resume Parser
+                                        </h2>
+                                        <p className="text-grey text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-sans tracking-wide">
+                                            Extract, analyze, and structure candidate data automatically with precision.
+                                            Compare the extracted data with the job description and get the best match.
+                                        </p>
                                     </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="fade-in">
-                                {uploadError && !selectedCandidate && (
-                                    <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-lg text-sm md:text-base font-sans mt-4">
-                                        ⚠️ {uploadError}
-                                    </div>
-                                )}
 
-                                {!selectedCandidate ? (
-                                    <CandidateList
-                                        candidates={resumeDataList}
-                                        onSelectCandidate={setSelectedCandidate}
-                                        onReset={handleReset}
-                                    />
-                                ) : (
-                                    <div className="space-y-6">
-                                        <button
-                                            onClick={() => setSelectedCandidate(null)}
-                                            className="flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors bg-carbon border border-irongrey hover:border-primary/50 px-4 py-2 rounded-lg w-fit group font-heading tracking-wider uppercase"
-                                        >
-                                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                            Back to Candidates
-                                        </button>
-                                        <Dashboard data={selectedCandidate} onReset={handleReset} />
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                    <Upload onUpload={handleUpload} loading={loading} onFileSelect={() => setIsFileSelected(true)} />
+
+                                    {uploadError && (
+                                        <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-lg text-sm md:text-base animate-pulse font-sans w-full max-w-2xl">
+                                            ⚠️ {uploadError}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="results"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                                    className="w-full"
+                                >
+                                    {uploadError && !selectedCandidate && (
+                                        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-lg text-sm md:text-base font-sans mt-4">
+                                            ⚠️ {uploadError}
+                                        </div>
+                                    )}
+
+                                    <AnimatePresence mode="wait">
+                                        {!selectedCandidate ? (
+                                            <motion.div
+                                                key="candidate-list"
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                            >
+                                                <CandidateList
+                                                    candidates={resumeDataList}
+                                                    onSelectCandidate={setSelectedCandidate}
+                                                    onReset={handleReset}
+                                                />
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div
+                                                key="candidate-detail"
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                className="space-y-6"
+                                            >
+                                                <button
+                                                    onClick={() => setSelectedCandidate(null)}
+                                                    className="flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors bg-carbon border border-irongrey hover:border-primary/50 px-4 py-2 rounded-lg w-fit group font-heading tracking-wider uppercase"
+                                                >
+                                                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                                    Back to Candidates
+                                                </button>
+                                                <Dashboard data={selectedCandidate} onReset={handleReset} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </main>
 
