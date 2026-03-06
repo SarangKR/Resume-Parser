@@ -5,7 +5,7 @@ import Dashboard from './components/Dashboard'
 import Sidebar from './components/Sidebar'
 
 function App() {
-    const [resumeData, setResumeData] = useState(null)
+    const [resumeDataList, setResumeDataList] = useState(null)
     const [loading, setLoading] = useState(false)
     const [uploadError, setUploadError] = useState(null)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -14,7 +14,7 @@ function App() {
 
     // Determine current progress step
     let currentStep = 0; // Default state: Nothing selected
-    if (resumeData) {
+    if (resumeDataList && resumeDataList.length > 0) {
         currentStep = 3; // Step 3: Review Data
     } else if (loading) {
         currentStep = 2; // Step 2: AI Analysis
@@ -22,46 +22,65 @@ function App() {
         currentStep = 1; // Step 1: Upload Resume (File Selected, waiting for Submit)
     }
 
-    const handleUpload = async (file, options = {}) => {
+    const handleUpload = async (files, options = {}) => {
         setLoading(true)
         setUploadError(null)
-        setResumeData(null)
-        setAutoOpenUpload(false) // Reset flag after upload starts
-
-        const formData = new FormData()
-        formData.append('file', file)
-
-        if (options.requiredSkills) {
-            formData.append('required_skills', options.requiredSkills)
-        }
-        if (options.recruiterEmail) {
-            formData.append('recruiter_email', options.recruiterEmail)
-        }
+        setResumeDataList(null)
+        setAutoOpenUpload(false)
 
         try {
-            const response = await fetch('/api/parse', {
-                method: 'POST',
-                body: formData,
-            })
+            const results = await Promise.allSettled(
+                files.map(async (file) => {
+                    const formData = new FormData()
+                    formData.append('file', file)
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.detail || 'Failed to parse resume')
+                    if (options.requiredSkills) {
+                        formData.append('required_skills', options.requiredSkills)
+                    }
+                    if (options.recruiterEmail) {
+                        formData.append('recruiter_email', options.recruiterEmail)
+                    }
+
+                    const response = await fetch('/api/parse', {
+                        method: 'POST',
+                        body: formData,
+                    })
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}))
+                        throw new Error(errorData.detail || `Failed to parse ${file.name}`)
+                    }
+
+                    const result = await response.json()
+                    return { ...result.data, meta: result.meta, fileName: file.name }
+                })
+            )
+
+            const successfulParsed = results
+                .filter(res => res.status === 'fulfilled')
+                .map(res => res.value)
+
+            const failedParsed = results
+                .filter(res => res.status === 'rejected')
+
+            if (successfulParsed.length === 0) {
+                setUploadError("Failed to parse any of the selected resumes. " + (failedParsed[0]?.reason?.message || ""))
+            } else {
+                setResumeDataList(successfulParsed)
+                if (failedParsed.length > 0) {
+                    setUploadError(`Successfully parsed ${successfulParsed.length} resumes. Failed to parse ${failedParsed.length} resumes.`)
+                }
             }
-
-            const result = await response.json()
-            // Merge meta into the data object so Dashboard receives everything
-            setResumeData({ ...result.data, meta: result.meta })
         } catch (error) {
-            console.error("Upload failed", error)
-            setUploadError(error.message || "Failed to parse resume. Please ensure the backend is running.")
+            console.error("Upload process failed", error)
+            setUploadError(error.message || "An unexpected error occurred during processing.")
         } finally {
             setLoading(false)
         }
     }
 
     const handleReset = () => {
-        setResumeData(null)
+        setResumeDataList(null)
         setUploadError(null)
         setIsFileSelected(false)
     }
@@ -100,7 +119,7 @@ function App() {
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-y-auto w-full">
                     <div className="container mx-auto px-4 md:px-8 py-8 md:py-12 max-w-7xl">
-                        {!resumeData ? (
+                        {(!resumeDataList || resumeDataList.length === 0) ? (
                             <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[80vh] fade-in">
                                 <div className="mb-8 md:mb-12 text-center space-y-4">
                                     <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-grey mb-2 tracking-wide font-heading text-glow uppercase">
@@ -121,7 +140,45 @@ function App() {
                                 )}
                             </div>
                         ) : (
-                            <Dashboard data={resumeData} onReset={handleReset} />
+                            <div className="space-y-12 fade-in">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-irongrey/30 pb-4">
+                                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-widest font-heading uppercase text-glow">
+                                        Processed {resumeDataList.length} Resume{resumeDataList.length === 1 ? '' : 's'}
+                                    </h2>
+                                    <button
+                                        onClick={handleReset}
+                                        className="w-full md:w-auto px-6 py-3 text-sm font-medium text-white bg-onyx border border-irongrey rounded-lg hover:bg-carbon hover:border-charcoal transition-all duration-200 shadow-sm font-heading tracking-wide uppercase"
+                                    >
+                                        Upload New Resumes
+                                    </button>
+                                </div>
+
+                                {uploadError && (
+                                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-lg text-sm md:text-base font-sans mt-4">
+                                        ⚠️ {uploadError}
+                                    </div>
+                                )}
+
+                                {resumeDataList.map((data, index) => (
+                                    <div key={index} className="relative">
+                                        {resumeDataList.length > 1 && (
+                                            <div className="absolute -left-4 md:-left-8 top-0 bottom-0 w-1 bg-irongrey/30 rounded-full hidden md:block" />
+                                        )}
+                                        <div className="mb-4 flex items-center gap-3">
+                                            <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-widest">
+                                                Resume #{index + 1}
+                                            </div>
+                                            <div className="text-dimgrey text-sm font-sans italic truncate max-w-xs md:max-w-md">
+                                                {data.fileName || `Candidate ${index + 1}`}
+                                            </div>
+                                        </div>
+                                        <Dashboard data={data} onReset={handleReset} />
+                                        {index < resumeDataList.length - 1 && (
+                                            <hr className="my-12 border-irongrey/30 border-t-2 border-dashed" />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </main>

@@ -6,7 +6,7 @@ export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
     const [showRecruiterOptions, setShowRecruiterOptions] = useState(false)
     const [requiredSkills, setRequiredSkills] = useState('')
     const [recruiterEmail, setRecruiterEmail] = useState('')
-    const [selectedFile, setSelectedFile] = useState(null)
+    const [selectedFiles, setSelectedFiles] = useState([])
     const inputRef = useRef(null)
 
     // useEffect(() => {
@@ -30,26 +30,26 @@ export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
         e.preventDefault()
         e.stopPropagation()
         setDragActive(false)
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFileSelect(e.dataTransfer.files[0])
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFileSelect(Array.from(e.dataTransfer.files))
         }
     }
 
     const handleChange = (e) => {
         e.preventDefault()
-        if (e.target.files && e.target.files[0]) {
-            handleFileSelect(e.target.files[0])
+        if (e.target.files && e.target.files.length > 0) {
+            handleFileSelect(Array.from(e.target.files))
         }
     }
 
-    const handleFileSelect = (file) => {
-        setSelectedFile(file)
-        if (onFileSelect) onFileSelect()
+    const handleFileSelect = (files) => {
+        setSelectedFiles(files)
+        if (onFileSelect) onFileSelect(files.length > 0)
     }
 
     const handleSubmit = () => {
-        if (selectedFile) {
-            onUpload(selectedFile, { requiredSkills, recruiterEmail })
+        if (selectedFiles.length > 0) {
+            onUpload(selectedFiles, { requiredSkills, recruiterEmail })
         }
     }
 
@@ -122,6 +122,7 @@ export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
                     type="file"
                     className="hidden"
                     accept=".pdf"
+                    multiple
                     onChange={handleChange}
                 />
 
@@ -135,10 +136,10 @@ export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
 
                 <div className="space-y-2">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white group-hover:text-primary transition-colors font-heading tracking-widest uppercase text-glow">
-                        {loading ? "Analyzing Resume..." : (selectedFile ? "Ready to Submit" : "Upload Candidate Resume")}
+                        {loading ? "Analyzing Resumes..." : (selectedFiles.length > 0 ? "Ready to Submit" : "Upload Candidate Resumes")}
                     </h3>
-                    <p className={`text-xs sm:text-sm md:text-base font-sans tracking-wide ${selectedFile ? 'text-primary font-semibold' : 'text-grey'}`}>
-                        {selectedFile ? `Selected: ${selectedFile.name}` : "Drag and drop your PDF here, or click to browse"}
+                    <p className={`text-xs sm:text-sm md:text-base font-sans tracking-wide ${selectedFiles.length > 0 ? 'text-primary font-semibold' : 'text-grey'}`}>
+                        {selectedFiles.length > 0 ? `Selected ${selectedFiles.length} file${selectedFiles.length === 1 ? '' : 's'}` : "Drag and drop your PDFs here, or click to browse"}
                     </p>
                 </div>
 
@@ -147,12 +148,12 @@ export default function Upload({ onUpload, loading, autoOpen, onFileSelect }) {
                 </div>
             </div>
 
-            {selectedFile && !loading && (
+            {selectedFiles.length > 0 && !loading && (
                 <button
                     onClick={handleSubmit}
                     className="mt-6 px-10 py-3 rounded-lg font-heading uppercase tracking-widest text-sm font-bold shadow-lg transition-all duration-300 bg-carbon border border-charcoal text-white hover:bg-carbon/80 hover:text-primary hover:border-primary/50"
                 >
-                    Submit for Parsing
+                    Submit {selectedFiles.length} Resume{selectedFiles.length === 1 ? '' : 's'} for Parsing
                 </button>
             )}
 
