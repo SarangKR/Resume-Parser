@@ -6,13 +6,13 @@ export default function Sidebar({ isOpen, onClose, onReset, currentStep = 0 }) {
             {/* Mobile Overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-black/50 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
                     onClick={onClose}
                 />
             )}
 
             <aside className={`
-                fixed lg:sticky top-0 h-screen z-50 lg:z-0
+                fixed lg:sticky top-0 h-screen z-[70] lg:z-0
                 w-72 flex-col border-r border-irongrey/30 bg-onyx/95 lg:bg-onyx/40 backdrop-blur-xl
                 transition-all duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:w-0 lg:-translate-x-0 lg:overflow-hidden lg:border-none lg:p-0'}
