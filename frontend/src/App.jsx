@@ -1,11 +1,13 @@
 import { useState, useRef } from 'react'
-import { FileText, Menu, PanelLeft, Mail } from 'lucide-react'
+import { FileText, Menu, PanelLeft, Mail, ArrowLeft } from 'lucide-react'
 import Upload from './components/Upload'
 import Dashboard from './components/Dashboard'
 import Sidebar from './components/Sidebar'
+import CandidateList from './components/CandidateList'
 
 function App() {
     const [resumeDataList, setResumeDataList] = useState(null)
+    const [selectedCandidate, setSelectedCandidate] = useState(null)
     const [loading, setLoading] = useState(false)
     const [uploadError, setUploadError] = useState(null)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -14,7 +16,9 @@ function App() {
 
     // Determine current progress step
     let currentStep = 0; // Default state: Nothing selected
-    if (resumeDataList && resumeDataList.length > 0) {
+    if (selectedCandidate) {
+        currentStep = 3; // Step 3: Review Data
+    } else if (resumeDataList && resumeDataList.length > 0) {
         currentStep = 3; // Step 3: Review Data
     } else if (loading) {
         currentStep = 2; // Step 2: AI Analysis
@@ -26,6 +30,7 @@ function App() {
         setLoading(true)
         setUploadError(null)
         setResumeDataList(null)
+        setSelectedCandidate(null)
         setAutoOpenUpload(false)
 
         try {
@@ -81,6 +86,7 @@ function App() {
 
     const handleReset = () => {
         setResumeDataList(null)
+        setSelectedCandidate(null)
         setUploadError(null)
         setIsFileSelected(false)
     }
@@ -140,44 +146,31 @@ function App() {
                                 )}
                             </div>
                         ) : (
-                            <div className="space-y-12 fade-in">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-irongrey/30 pb-4">
-                                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-widest font-heading uppercase text-glow">
-                                        Processed {resumeDataList.length} Resume{resumeDataList.length === 1 ? '' : 's'}
-                                    </h2>
-                                    <button
-                                        onClick={handleReset}
-                                        className="w-full md:w-auto px-6 py-3 text-sm font-medium text-white bg-onyx border border-irongrey rounded-lg hover:bg-carbon hover:border-charcoal transition-all duration-200 shadow-sm font-heading tracking-wide uppercase"
-                                    >
-                                        Upload New Resumes
-                                    </button>
-                                </div>
-
-                                {uploadError && (
-                                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-lg text-sm md:text-base font-sans mt-4">
+                            <div className="fade-in">
+                                {uploadError && !selectedCandidate && (
+                                    <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-lg text-sm md:text-base font-sans mt-4">
                                         ⚠️ {uploadError}
                                     </div>
                                 )}
 
-                                {resumeDataList.map((data, index) => (
-                                    <div key={index} className="relative">
-                                        {resumeDataList.length > 1 && (
-                                            <div className="absolute -left-4 md:-left-8 top-0 bottom-0 w-1 bg-irongrey/30 rounded-full hidden md:block" />
-                                        )}
-                                        <div className="mb-4 flex items-center gap-3">
-                                            <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-xs font-bold font-heading uppercase tracking-widest">
-                                                Resume #{index + 1}
-                                            </div>
-                                            <div className="text-dimgrey text-sm font-sans italic truncate max-w-xs md:max-w-md">
-                                                {data.fileName || `Candidate ${index + 1}`}
-                                            </div>
-                                        </div>
-                                        <Dashboard data={data} onReset={handleReset} />
-                                        {index < resumeDataList.length - 1 && (
-                                            <hr className="my-12 border-irongrey/30 border-t-2 border-dashed" />
-                                        )}
+                                {!selectedCandidate ? (
+                                    <CandidateList
+                                        candidates={resumeDataList}
+                                        onSelectCandidate={setSelectedCandidate}
+                                        onReset={handleReset}
+                                    />
+                                ) : (
+                                    <div className="space-y-6">
+                                        <button
+                                            onClick={() => setSelectedCandidate(null)}
+                                            className="flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors bg-carbon border border-irongrey hover:border-primary/50 px-4 py-2 rounded-lg w-fit group font-heading tracking-wider uppercase"
+                                        >
+                                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                            Back to Candidates
+                                        </button>
+                                        <Dashboard data={selectedCandidate} onReset={handleReset} />
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
                     </div>
